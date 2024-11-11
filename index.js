@@ -5,7 +5,8 @@ const sqlite3 = require('sqlite3').verbose();
 
 //Documentación en https://expressjs.com/en/starter/hello-world.html
 const app = express()
-
+const cors = require('cors');
+app.use(cors());
 //Creamos un parser de tipo application/json
 //Documentación en https://expressjs.com/en/resources/middleware/body-parser.html
 const jsonParser = bodyParser.json()
@@ -67,9 +68,19 @@ app.post('/insert', jsonParser, function (req, res) {
 
 
 app.get('/', function (req, res) {
-    //Enviamos de regreso la respuesta
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ 'status': 'ok2' }));
+    const stmt  =  db.prepare('SELECT * from todos');
+    stmt.all((err, rows) => {
+        if (err) {
+            console.error("Error running stmt:", err);
+            res.status(500).send({ error: 'Internal Server Error' });
+        } else if (rows.length === 0) {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).end(JSON.stringify({ message: 'No elements in todos.' }));
+        } else {
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).end(JSON.stringify(rows));
+        }
+    });
 })
 
 
